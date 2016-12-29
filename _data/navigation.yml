@@ -1,8 +1,5 @@
 # main links
 main:
-  - title: "VLC testing"
-    text: "Test VLC and give us feedback"
-    url: /vlc-testing/
   - title: "Posts by tags"
     url: /tags/
   - title: "Posts by categories"
@@ -18,6 +15,9 @@ main:
 vlc:
   - title: "VLC"
     children:
-     - title: "VLC Android beta program"
+     - title: "Beta test"
        text: "Test VLC and give us feedback"
        url: /vlc-testing/
+     - title: "Contribute"
+       text: "Contribute to VLC project"
+       url: /contribute/
