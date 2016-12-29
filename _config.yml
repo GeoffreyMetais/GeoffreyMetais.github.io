@@ -246,11 +246,14 @@ defaults:
       type: posts
     values:
       layout: single
+      excerpt_separator: <!--summary-->
       author_profile: true
       read_time: true
       comments: # true
       share: true
-      related: true
+      related: false
+      sidebar:
+        nav: "vlc"
   # _pages
   - scope:
       path: ""
@@ -258,3 +261,5 @@ defaults:
     values:
       layout: single
       author_profile: true
+      sidebar:
+        nav: "vlc"
