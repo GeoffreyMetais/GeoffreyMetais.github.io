@@ -17,7 +17,7 @@ vlc:
     children:
      - title: "Beta test"
        text: "Test VLC and give us feedback"
-       url: /vlc-testing/
+       url: /vlc/testing/
      - title: "Contribute"
        text: "Contribute to VLC project"
-       url: /contribute/
+       url: /vlc/contribute/

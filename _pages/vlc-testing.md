@@ -1,7 +1,7 @@
 ---
 title: "Test VLC on Android"
 layout: single
-permalink: /vlc-testing/
+permalink: /vlc/testing/
 feature_beta:
   - image_path: /assets/images/general/cone_store.png
     alt: "Android beta test registration"

@@ -1,7 +1,7 @@
 ---
 title: "Contribute to VLC"
 layout: single
-permalink: /contribute/
+permalink: /vlc/contribute/
 ---
 
 As any open software libre, VLC is open to contributions!
