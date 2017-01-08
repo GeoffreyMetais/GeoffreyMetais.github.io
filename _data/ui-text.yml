@@ -115,7 +115,7 @@ fr: &DEFAULT_FR
   minute_read                : "minute(s) de lecture"
   share_on_label             : "Partager sur"
   meta_label                 :
-  tags_label                 : "Tags :"
+  tags_label                 : "Etiquettes :"
   categories_label           : "Catégories :"
   date_label                 : "Mis à jour :"
   comments_label             : "Laisser un commentaire"
