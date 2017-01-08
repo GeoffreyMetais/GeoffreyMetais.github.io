@@ -102,14 +102,14 @@ fr: &DEFAULT_FR
   pagination_next            : "Suivant"
   breadcrumb_home_label      : "Accueil"
   breadcrumb_separator       : "/"
-  menu_label                 :
+  menu_label                 : "Menu"
   toc_label                  : "Sur cette page"
   ext_link_label             : "Lien direct"
   less_than                  : "moins de"
   minute_read                : "minute de lecture"
   share_on_label             : "Partager sur"
   meta_label                 :
-  tags_label                 : "Tags :"
+  tags_label                 : "Etiquettes :"
   categories_label           : "Catégories :"
   date_label                 : "Mis à jour :"
   comments_label             : "Laisser un commentaire"
