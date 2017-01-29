@@ -1,0 +1,82 @@
+---
+title: "Tips & tricks for VLC"
+categories:
+ - VLC
+ - Android
+ - features
+tags:
+ - vlc
+ - android
+---
+
+Here are some hidden features of VLC on Android.
+<!--summary-->
+{% include toc icon="thumbs-o-up" title="Tips" %}
+
+## STOP playback service
+There are 2 ways to completely stop vlc player service (and not just pause playback), but this action has no explicit button.
+- **With mini player**: long press on play/pause button
+![stop player](/assets/images/tips/stop.gif)
+- **With playback icon**: **only when playback is paused**
+  - on Android 5+: you can swipe the notification.
+  - on Android 4.x: you should have a 'x' button on top-right corner.
+![stop notification](/assets/images/tips/stop_notification.gif)
+
+## Repeat video
+With version 2.1 you'll have the repeat button available in the video player advanced options, but you can already do that with version 2.0.x:  
+**Long press on play/pause** button to switch playback to *repeat* mode so your video playback will loop
+
+## Reorder media in current playlist
+Simply **drag** media within current playlist to reorder it.
+
+![reorder playlist](/assets/images/tips/drag.gif){: .align-center}
+
+## Load last playlist
+In action bar, the circled *play* button triggers loading of last playlist from the current category: In video view it will load last video(s) played, in Audio view it will load last audio playlist.
+
+![load last audio playlist](/assets/images/tips/load_last.gif){: .align-center}
+
+With remote play/pause control (wired headset or bluetooth ad2p device) when VLC is not playing, you can load last audio playlist and continue playback where you stopped it.
+
+## Next/previous by swipe
+**Swipe miniplayer** on left/right triggers skip to previous/next media.
+
+![swipe next](/assets/images/tips/next.gif){: .align-center}
+
+## Video player bindings
+
+If you have a keyboard or a gamepad connected to your Android device, here are the key bindings in video player:
+
+within DVD menu:
+
+|Key(s)| Action |
+|:---:|:---:|
+| ↓↑←→ | navigate |
+| Gamepad A or X /play/pause/space/OK/enter| click on focused item|
+
+in 360° video playback (version 2.1.0+):
+
+|Key(s)| Action |
+|:---:|:---:|
+| ↓↑←→ | change viewpoint |
+
+normal case:
+
+|Key(s)| Action |
+|:---:|:---:|
+|F/fast_forward/→ | seek (+10 seconds) |
+|R/rewind/← | seek (-10 seconds) |
+|R1 | seek (+1 minute) |
+|L1 | seek (-1 minute) |
+|A(gamepad)/play/pause/space/OK | toggle play/pause |
+|O/Y(gamepad)/menu/↑ | show advanced options |
+|V/audio-track/X(gamepad) | open subtitles options |
+|N | show DVD navigation menu |
+|A | resize video |
+|M/mute | toggle sound mute |
+|S/STOP | stop playback & exit player |
+|captions | select subtitles |
+|J | delay audio (-50ms) |
+|K | delay audio (+50ms) |
+|G | delay subtitles (-50ms) |
+|H | delay subtitles (+50ms) |
