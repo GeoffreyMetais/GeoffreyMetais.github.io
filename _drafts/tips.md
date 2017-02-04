@@ -1,8 +1,6 @@
 ---
 title: "Tips & tricks for VLC"
 categories:
- - VLC
- - Android
  - features
 tags:
  - vlc

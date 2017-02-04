@@ -2,8 +2,6 @@
 title: "Recyclerview++ with DiffUtil"
 excerpt: "DiffUtil tool allowed greatly improving lists/grids updates in VLC, here is how we implemented it."
 categories:
- - VLC
- - Android
  - code
 tags:
  - vlc
