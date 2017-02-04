@@ -3,8 +3,6 @@ title: "Work is in progress on VLC!"
 excerpt_separator: <!--summary-->
 comments: false
 categories:
-  - VLC
-  - Android
   - features
 tags:
   - vlc
