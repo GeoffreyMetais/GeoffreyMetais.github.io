@@ -19,7 +19,7 @@ feature_community:
     btn_label: "Join the community"
     btn_class: "btn--small btn--warning"
 ---
-
+#### beta testing program
 You are welcome testing beta or stable versions of VLC on Android and give us feedback.
 Releases are usually announced on G+ community.
 
@@ -28,6 +28,8 @@ Here are the important links to visit:
 {% include feature_row id="feature_beta" type="right" %}
 
 {% include feature_row id="feature_community" type="right" %}
+
+#### Nighty builds
 
 If you want to try out current development state, you can install a [nightly build](http://nightlies.videolan.org/build/)
 And chose your category according to your device.  
