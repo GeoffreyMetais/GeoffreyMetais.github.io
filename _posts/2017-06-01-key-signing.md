@@ -88,6 +88,8 @@ jarsigner -verify app.apk
 
 The `-sigalg SHA1withRSA -digestalg SHA1` parameters are needed because we support old devices. If you don't support Android 4.2 and older you can rip it off.
 {: .notice--info}
+
+
 # Scripting
 
 Here is the full bash script I use to sign all my apks at once:
@@ -112,3 +114,40 @@ zipalign 4 $i $i.tmp && mv -vf $i.tmp $i
 done
 unset YUBI_PIN
 ```
+
+# Apksigner
+
+Since build tools 24.0.3, Google released [apksigner](https://developer.android.com/studio/command-line/apksigner.html), a newer signature tool with convenient arguments like `--min-sdk-version` to get sure the application signature is correct.
+But current release (25.0.3) doesn't handle pkcs11 protocol correctly.
+
+builds tools 26.0.0 have just been released and they do not contain apksigner anymore
+{: .notice--info}
+
+We still can build apksigner from source  to get upstream version which is able to manage our Yubikey!
+
+```
+git clone https://android.googlesource.com/platform/tools/apksig
+```
+We need Bazel to build this project, [here are some instructions to install it](https://bazel.build/versions/master/docs/install.html)
+Then go into apksig folder, create a Bazel workspace and let's build it.
+
+```
+touch WORKSPACE
+export WORKSPACE=`pwd`
+bazel build :apksigner
+```
+
+And here is how we can sign with it:
+```
+~/tmp/apksig/bazel-bin/apksigner sign --ks NONE --ks-pass "pass:$YUBI_PIN"\
+--min-sdk-version 9 --provider-class sun.security.pkcs11.SunPKCS11\
+--provider-arg pkcs11_java.cfg --ks-type PKCS11 app.apk
+```
+With apksigner, we need to zipalign the apk BEFORE signing them.
+{: .notice--warning}
+
+We can also verify apk is well signed:
+```
+~/tmp/apksig/bazel-bin/apksigner verify app.apk
+```
+And `verify` accepts `--min-sdk-version` and `--max-sdk-version` to ensure your users won't get `103` once the release is out.
