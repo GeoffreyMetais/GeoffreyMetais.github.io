@@ -19,6 +19,7 @@ Here is the precise process we went through to get this done.
 
 # Setup
 
+### Install dependencies
 I am considering a Debian based distribution with open JDK 8 installed for this post.
 {: .notice--info}
 
@@ -28,6 +29,8 @@ sudo apt-get install opensc-pkcs11 zipalign
 ```
 `zipalign` can also be found in *android_sdk_path*/build-tools/*version*/
 {: .notice--info}
+
+### Prepare configuration file  
 Then, we prepare the pkcs11 configuration. Let's create file `pkcs11_java.cfg` and fill it with:
 ```
 name = OpenSC-PKCS11
@@ -40,15 +43,26 @@ Yubico How-To advises `slotListIndex = 1`, but I had to set it to 0 to make it w
 
 Let's assume we save it in: `~/.pkcs11_java.cfg`
 
-
+### Set up your own management key
+If you did not set your management key, you have to do it now:
+```
+key=`dd if=/dev/random bs=1 count=24 2>/dev/null | hexdump -v -e '/1 "%02X"'`
+echo $key
+yubico-piv-tool -a set-mgm-key -n $key
+```
+### Change your PIN
+Same for PIN setting, default one is *123456*
+```
+yubico-piv-tool -a change-pin -P 123456 -N <NEW PIN>
+```
 # Keystore import
 
 Now it's time to import our keystore to the key PIV slot.
 ```
 keytool -importkeystore -srckeystore mykeystore.keystore -destkeystore mykeystorey.p12 -srcstoretype jks -deststoretype pkcs12
-yubico-piv-tool -s 9a -a import-key -a import-cert -i mykeystorey.p12 -K PKCS12
+yubico-piv-tool -s 9a -a import-key -a import-cert -i mykeystorey.p12 -K PKCS12 -k
 ```
- You will be asked to type in the keystore password.
+ You will be asked to type in the keystore password, then the certificate management key.
 
  Starting from now, you won't have to type the keystore password anymore but your Yubikey PIN.
 {: .notice--info}
@@ -58,8 +72,7 @@ yubico-piv-tool -s 9a -a import-key -a import-cert -i mykeystorey.p12 -K PKCS12
 keytool -providerClass sun.security.pkcs11.SunPKCS11 -providerArg ~/.pkcs11_java.cfg -keystore NONE -storetype PKCS11 -list -J-Djava.security.debug=sunpkcs11
 ```
 This is the Yubikey PIN you have to type-in now.  
-Default PIN is 123456, no need to tell you it must be changed…  
-And don't forget to touch it I you enabled the 'touch-to-sign' option.
+And don't forget to touch it if you enabled the 'touch-to-sign' option.
 {: .notice--warning}
 
 # App signature
@@ -139,11 +152,11 @@ bazel build :apksigner
 
 And here is how we can sign with it:
 ```
-~/tmp/apksig/bazel-bin/apksigner sign --ks NONE --ks-pass "pass:$YUBI_PIN"\
---min-sdk-version 9 --provider-class sun.security.pkcs11.SunPKCS11\
+~/tmp/apksig/bazel-bin/apksigner sign --ks NONE --ks-pass "pass:$YUBI_PIN" \
+--min-sdk-version 9 --provider-class sun.security.pkcs11.SunPKCS11 \
 --provider-arg pkcs11_java.cfg --ks-type PKCS11 app.apk
 ```
-With apksigner, we need to zipalign the apk BEFORE signing them.
+With apksigner, we need to zipalign the apk **before** signing them.
 {: .notice--warning}
 
 We can also verify apk is well signed:
