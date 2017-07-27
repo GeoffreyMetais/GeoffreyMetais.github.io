@@ -75,7 +75,12 @@ This is the Yubikey PIN you have to type-in now.
 And don't forget to touch it if you enabled the 'touch-to-sign' option.
 {: .notice--warning}
 
+
 # App signature
+In build tools 24.0.3 Google has released [apksigner](https://developer.android.com/studio/command-line/apksigner.html), a new signature tool with convenient arguments like `--min-sdk-version` to get sure the application signature is correct.
+
+Until release (26.0.1) apksigner doesn't handle pkcs11 protocol correctly. So, **you need to use build-tools 26.0.1+**
+{: .notice--warning}
 
 We now have to get an **unsigned** apk, so we must tell gradle to not apply any signing config for release builds
 ```
@@ -87,20 +92,18 @@ We now have to get an **unsigned** apk, so we must tell gradle to not apply any 
     }
 ```
 
-Finally we can sign an apk without our keystore, we just need the Yubikey to be plugged and fire up *jarsigner*
+Finally we can sign an apk without our keystore, we just need the Yubikey to be plugged and fire up *apksigner*
 ```
-jarsigner -providerClass sun.security.pkcs11.SunPKCS11 -providerArg ~/.pkcs11_java.cfg \
-  -keystore NONE -storetype PKCS11 -sigalg SHA1withRSA -digestalg SHA1 \
-  app.apk "Certificate for PIV Authentication"
+ANDROID_SDK_PATH/build-tools/BUILD_TOOLS_VERSION/apksigner sign --ks NONE --ks-pass "pass:$YUBI_PIN" \
+--min-sdk-version 9 --provider-class sun.security.pkcs11.SunPKCS11 \
+--provider-arg pkcs11_java.cfg --ks-type PKCS11 app.apk
 ```
 
 We can now verify the package is signed:
 ```
-jarsigner -verify app.apk
+apksigner verify --verbose app.apk
 ```
-
-The `-sigalg SHA1withRSA -digestalg SHA1` parameters are needed because we support old devices. If you don't support Android 4.2 and older you can rip it off.
-{: .notice--info}
+`verify` accepts `--min-sdk-version` and `--max-sdk-version` to ensure your users won't get `103` Play Store error code once the app is released.
 
 
 # Scripting
@@ -116,51 +119,35 @@ read -p 'PIN: ' YUBI_PIN
 stty echo
 trap - EXIT
 
+BT_VERSION="26.0.1"
+
 echo "\nSigning apks\n"
 for i in `ls *.apk`;
 do
-jarsigner -providerClass sun.security.pkcs11.SunPKCS11 \
-  -providerArg ~/.pkcs11_java.cfg -keystore NONE -storetype PKCS11 \
-  -sigalg SHA1withRSA -digestalg SHA1 -storepass $YUBI_PIN \
-  $i "Certificate for PIV Authentication"
-zipalign 4 $i $i.tmp && mv -vf $i.tmp $i
+$ANDROID_SDK/build-tools/$BT_VERSION/zipalign 4 $i $i.tmp && mv -vf $i.tmp $i
+$ANDROID_SDK/build-tools/$BT_VERSION/apksigner sign --ks NONE \
+        --ks-pass "pass:$YUBI_PIN" --min-sdk-version 9 \
+        --max-sdk-version 26 --provider-class sun.security.pkcs11.SunPKCS11 \
+        --provider-arg ~/.pkcs11_java.cfg --ks-type PKCS11 $i
 done
 unset YUBI_PIN
 ```
 
-# Apksigner
 
-Since build tools 24.0.3, Google released [apksigner](https://developer.android.com/studio/command-line/apksigner.html), a newer signature tool with convenient arguments like `--min-sdk-version` to get sure the application signature is correct.
-But current release (25.0.3) doesn't handle pkcs11 protocol correctly.
+# Jarsigner
 
-builds tools 26.0.0 have just been released and they do not contain apksigner anymore
+We can also use jarsigner to sign your apk:
+```
+jarsigner -providerClass sun.security.pkcs11.SunPKCS11 -providerArg ~/.pkcs11_java.cfg \
+  -keystore NONE -storetype PKCS11 -sigalg SHA1withRSA -digestalg SHA1 \
+  app.apk "Certificate for PIV Authentication"
+```
+The `-sigalg SHA1withRSA -digestalg SHA1` parameters are needed because we support old devices. If you don't support Android 4.2 and older you can rip it off.
 {: .notice--info}
-
-We still can build apksigner from source  to get upstream version which is able to manage our Yubikey!
-
-```
-git clone https://android.googlesource.com/platform/tools/apksig
-```
-We need Bazel to build this project, [here are some instructions to install it](https://bazel.build/versions/master/docs/install.html)
-Then go into apksig folder, create a Bazel workspace and let's build it.
-
-```
-touch WORKSPACE
-export WORKSPACE=`pwd`
-bazel build :apksigner
-```
-
-And here is how we can sign with it:
-```
-~/tmp/apksig/bazel-bin/apksigner sign --ks NONE --ks-pass "pass:$YUBI_PIN" \
---min-sdk-version 9 --provider-class sun.security.pkcs11.SunPKCS11 \
---provider-arg pkcs11_java.cfg --ks-type PKCS11 app.apk
-```
-With apksigner, we need to zipalign the apk **before** signing them.
+With jarsigner, we need to zipalign the apk **after** signing them.
 {: .notice--warning}
 
-We can also verify apk is well signed:
+And verify the package is signed:
 ```
-~/tmp/apksig/bazel-bin/apksigner verify app.apk
+jarsigner -verify app.apk
 ```
-And `verify` accepts `--min-sdk-version` and `--max-sdk-version` to ensure your users won't get `103` once the release is out.
