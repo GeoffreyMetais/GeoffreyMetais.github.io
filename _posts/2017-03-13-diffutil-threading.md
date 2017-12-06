@@ -170,8 +170,49 @@ public class MyAdapter extends BaseQueuedAdapter<List<Item>, MyAdapter.ViewHolde
 
 That's it, we now have asynchronous and classy RecyclerView updates without extra boilerplate 😎
 
+## The Kotlin way
+
+Because we can do better with Kotlin!  
+
+First of all, we use an [Actor], to easily operate a [Channel], so we can send this one every single update we want.  It's capacity is set to `CONFLATED` which means that the channel will bufffer at most one element: when busy, it will just replace the buffered element by the new one we provided. That's a smarter way to process our waiting queue.
+
+When ready, `eventActor` will call `internalUpdate` in the `CommonPool`, in which we still do the calculation.  
+UI dispatch is done in `launch` higher-order function with `UI` as parameter so we can `join()` it:  
+In Kotlin, `join()` doesn't block the current thread but it *suspends* it while UI job is done, so no thread blocking!
+
+And as a bonus, we gained thread safety! We can call `update(list)` from any thread now.
+
+```kotlin
+abstract class DiffUtilAdapter<D, VH : RecyclerView.ViewHolder> : RecyclerView.Adapter<VH>() {
+
+    protected var mDataset: List<D> = listOf()
+    private val diffCallback by lazy(LazyThreadSafetyMode.NONE) { DiffCallback() }
+    private val eventActor = actor<List<D>>(capacity = Channel.CONFLATED) { for (list in channel) internalUpdate(list) }
+
+    fun update (list: List<D>) = eventActor.offer(list)
+
+    private suspend fun internalUpdate(list: List<D>) {
+        val result = DiffUtil.calculateDiff(diffCallback.apply { newList = list }, false)
+        launch(UI) {
+            mDataset = list
+            result.dispatchUpdatesTo(this@DiffUtilAdapter)
+        }.join()
+    }
+
+    private inner class DiffCallback : DiffUtil.Callback() {
+        lateinit var newList: List<D>
+        override fun getOldListSize() = mDataset.size
+        override fun getNewListSize() = newList.size
+        override fun areContentsTheSame(oldItemPosition : Int, newItemPosition : Int) = true
+        override fun areItemsTheSame(oldItemPosition : Int, newItemPosition : Int) = mDataset[oldItemPosition] == newList[newItemPosition]
+    }
+}
+```
+
 
 [DiffUtil]: https://developer.android.com/reference/android/support/v7/util/DiffUtil.html
 [DiffUtil.Callback]: https://developer.android.com/reference/android/support/v7/util/DiffUtil.Callback.html
 [DiffUtil.DiffResult]: https://developer.android.com/reference/android/support/v7/util/DiffUtil.DiffResult.html
 [Jon F Hancock blog post]: https://medium.com/@jonfhancock/get-threading-right-with-diffutil-423378e126d2
+[Actor]: https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md#actors
+[Channel]: https://github.com/Kotlin/kotlinx.coroutines/blob/master/coroutines-guide.md#channels
