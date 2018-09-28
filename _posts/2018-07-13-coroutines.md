@@ -26,8 +26,8 @@ The goal here is to avoid callbacks and make concurrency easier.
 Very simple first example, we launch a coroutine in the `UI` context. In it, we retrieve an image from the `IO` one, and process it back in `UI`.  
 
 ```kotlin
-launch(UI) {
-    val image = withContext(IO) { getImage() } // Get from IO context
+launch(Dispatchers.Main) {
+    val image = withContext(Dispatchers.IO) { getImage() } // Get from IO context
     imageView.setImageBitmap(image) // Back on main thread
 }
 ```
@@ -38,9 +38,9 @@ Staightforward code, like a single threaded function. And while `getImage` runs 
 Second example, we now want 2 background works done to use them. We will use the `async`/`await` duo to make them run in parallel and use their result in main thread as soon as both are ready:
 
 ```kotlin
-val job = launch(UI) {
-    val deferred1 = async { getFirstValue() }
-    val deferred2 = async(IO) { getSecondValue() }
+val job = launch(Dispatchers.Main) {
+    val deferred1 = async(Dispatchers.Default) { getFirstValue() }
+    val deferred2 = async(Dispatchers.IO) { getSecondValue() }
     useValues(deferred1.await(), deferred2.await())
 }
 
@@ -72,20 +72,24 @@ public final void runOnUiThread(Runnable action) {
 Android implementation of `UI` context is a dispatcher based on a Handler. So this really is the matching implementation:
 
 ```kotlin
-launch(UI) { ... }
+launch(Dispatchers.Main) { ... }
         vs
-launch(UI, CoroutineStart.UNDISPATCHED) { ... }
+launch(Dispatchers.Main, CoroutineStart.UNDISPATCHED) { ... }
+
+
+// Since kotlinx 0.26:
+launch(Dispatchers.Main.immediate) { ... }
 ```
 
-`launch(UI)` posts a `Runnable` in a `Handler`, so its code execution is not immediate.  
+`launch(Dispatchers.Main)` posts a `Runnable` in a `Handler`, so its code execution is not immediate.  
 `launch(UI, CoroutineStart.UNDISPATCHED)` will immediately execute its lambda expression in the current thread.
 
-`UI` guarantees that **coroutine is dispatched on main thread when it resumes**, and it uses a `Handler` as the native Android implementation to post in the application event loop.
+`Dispatchers.Main` guarantees that **coroutine is dispatched on main thread when it resumes**, and it uses a `Handler` as the native Android implementation to post in the application event loop.
 
 See its actual implementation:
 
 ```kotlin
-val UI = HandlerContext(Handler(Looper.getMainLooper()), "UI")
+val Main: HandlerDispatcher = HandlerContext(mainHandler, "Main")
 ```
 
 To get a better understanding of Android dispatching, you can read this blog post on [Understanding Android Core: Looper, Handler, and HandlerThread](https://blog.mindorks.com/android-core-looper-handler-and-handlerthread-bd54d69fe91a).
@@ -100,38 +104,67 @@ val exceptionHandler = CoroutineExceptionHandler {
     coroutineContext, throwable -> whatever(throwable)
 }
 
-launch(CommonPool+exceptionHandler, parent = job) { ... }
+launch(Disaptchers.Default+exceptionHandler+job) { ... }
 ```
 
 `job.cancel()` will cancel all coroutines that have `job` as a parent. And `exceptionHandler` will receive all thrown exceptions in these coroutines.
+
+## Scope
+
+```kotlin
+launch(Dispatchers.Main) {
+    coroutineScope { 
+        val deferred1 = async(Dispatchers.Default) { getFirstValue() }
+        val deferred2 = async(Dispatchers.IO) { getSecondValue() }
+        useValues(deferred1.await(), deferred2.await())
+    }
+} // No need to join()
+```
+
+
+```kotlin
+open class ScopedViewModel : ViewModel(), CoroutineScope {
+    protected val job = Job()
+    override val coroutineContext = Dispatchers.Main+job
+
+    override fun onCleared() {
+        super.onCleared()
+        job.cancel()
+    }
+}
+```
+
+Launching coroutines in a `CoroutineScope`:
+
+```kotlin
+launch {
+    val foo = withContext(Dispatchers.IO) { … }
+    // Code executed within scope's CoroutineContext
+    …
+}
+
+launch(Dispatchers.Default) {
+    // Code executed in default threadpool.
+    …
+}
+```
 
 ## Notes
 
 - Coroutines limit Java interoperability
 - Confine mutablility to avoid locks
 - Coroutines are for ~~threading~~ **waiting**
-  - Avoid I/O in CommonPool (and UI…)
-  - SharedPool dispatcher coming soon to improve this
+  - Avoid I/O in `Dispatchers.Default` (and `Main`…)
+  - `Dispatchers.IO` designed for this
 - Threads are expensive, so are single-thread contexts
-- `CommonPool` is based on a ForkJoinPool on Android 5+
+- `Dispatchers.Default` is based on a ForkJoinPool on Android 5+
 - Coroutines can be used via Channels
-
-`CommonPool` is a threadpool, aimed to be intensively used. If you perform I/O tasks in it, you could get all its threads blocked at the same time and any coroutine relying on it will be waiting.  
-JetBrains is adressing this issue and will probably release a shared pool guarantying that at least one thread is always free from I/O operations.  
-For now, it's important to keep it free from long tasks and execute them in dedicated threads/contexts, like:
-{: .notice--warning}
-
-```kotlin
-val IO = ThreadPoolExecutor(0, Integer.MAX_VALUE, 60L,
-        TimeUnit.SECONDS, SynchronousQueue<Runnable>()
-        ).asCoroutineDispatcher()
-```
 
 # Callbacks and locks elimination with channels
 
 Channel definition from JetBrain documentation:
 
-A `Channel` is conceptually very similar to `BlockingQueue`. One key difference is that instead of a blocking put operation it has a suspending `send`, and instead of a blocking take operation it has a suspending `receive`.
+A `Channel` is conceptually very similar to `BlockingQueue`. One key difference is that instead of a blocking put operation it has a suspending `send` (or a non-blocking `offer`), and instead of a blocking take operation it has a suspending `receive`.
 
 ## Actors
 
@@ -147,7 +180,7 @@ An `actor` will basically forward any order to a coroutine `Channel`. It will **
 
 ```kotlin
 protected val updateActor by lazy {
-    actor<Update>(UI, capacity = Channel.UNLIMITED) {
+    actor<Update>(capacity = Channel.UNLIMITED) {
         for (update in channel) when (update) {
             Refresh -> updateList()
             is Filter -> filter.filter(update.query)
@@ -178,20 +211,15 @@ And all this actions will be queued, they will never run in parallel. That's a g
 (Sample shamefully copied from JetBrain's [Guide to UI programming with coroutines](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/coroutines-guide-ui.md))
 
 Actors can be profitable for Android UI management too, they can ease tasks cancellation and prevent overloading of the UI thread.
-
-Let's first declare a `JobHolder` interface, which will be applied to our `Activity`. This job will be used as a parent for any user triggered task, and will allow their cancellation.
-
-```kotlin
-interface JobHolder {
-    val job: Job
-}
 ```
 
 Let's implement it and call `job.cancel()` when activity is destroyed.
 
 ```kotlin
-class MyActivity : AppCompatActivity(), JobHolder {
-    override val job: Job = Job() // the instance of a Job for this activity
+class MyActivity : AppCompatActivity(), CoroutineScope {
+    protected val job = Job() // the instance of a Job for this activity
+    override val coroutineContext = Dispatchers.Main.immediate+job
+
 
     override fun onDestroy() {
         super.onDestroy()
@@ -200,22 +228,24 @@ class MyActivity : AppCompatActivity(), JobHolder {
 }
 ```
 
-A bit better, with an [extension function](https://kotlinlang.org/docs/reference/extensions.html#extension-functions), we can make this `Job` accessible from any `View` of a `JobHolder`
+A bit better, with an [extension function](https://kotlinlang.org/docs/reference/extensions.html#extension-functions), we can make this `CoroutineContext` accessible from any `View` of a `CoroutineScope`
 
 ```kotlin
-val View.contextJob: Job
-    get() = (context as? JobHolder)?.job ?: NonCancellable
+val View.coroutineContext: CoroutineContext?
+    get() = (context as? CoroutineScope)?.coroutineContext
 ```
 
-We can now combine all this, `setOnClick` function creates a conflated `actor` to manage its `onClick` actions. In case of multiple clicks, intermediates actions will be ignored, preventing any **ANR**, and these actions will be executed in a context with `contextJob` as a parent. So it will be cancelled when `Activity` is destroyed 😎
+We can now combine all this, `setOnClick` function creates a conflated `actor` to manage its `onClick` actions. In case of multiple clicks, intermediates actions will be ignored, preventing any **ANR**, and these actions will be executed in `Activity`'s scope`. So it will be cancelled when `Activity` is destroyed 😎
 
 ```kotlin
 fun View.setOnClick(action: suspend () -> Unit) {
     // launch one actor as a parent of the context job
-    val eventActor = actor<Unit>(context = UI,
-                start = CoroutineStart.UNDISPATCHED,
-                capacity = Channel.CONFLATED,
-                parent = contextJob) {
+    val eventActor = coroutineContext?.actor<Unit>(
+        capacity = Channel.CONFLATED) {
+        for (event in channel) action()
+    } ?: GlobalScope.actor<Unit>(
+        Dispatchers.Main,
+        capacity = Channel.CONFLATED) {
         for (event in channel) action()
     }
     // install a listener to activate this actor
@@ -267,7 +297,7 @@ private val refreshListener = object : EventListener{
     override fun onBrowseEnd() {
         val list = refreshList.toMutableList()
         refreshList.clear()
-        launch(UI) {
+        launch {
             dataset.value = list
             parseSubDirectories()
         }
