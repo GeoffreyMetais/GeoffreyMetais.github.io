@@ -136,15 +136,25 @@ open class ScopedViewModel : ViewModel(), CoroutineScope {
 
 Launching coroutines in a `CoroutineScope`:
 
+`launch` or `async` default dispatcher is now the current scope dispatcher. And we can still choose a different one the same way we did before.
+
 ```kotlin
 launch {
     val foo = withContext(Dispatchers.IO) { … }
-    // Code executed within scope's CoroutineContext
+    // lambda runs within scope's CoroutineContext
     …
 }
 
 launch(Dispatchers.Default) {
-    // Code executed in default threadpool.
+    // lambda runs in default threadpool.
+    …
+}
+```
+
+Standalone coroutine launching (outside of any `CoroutineScope`):
+```kotlin
+GlobalScope.launch(Dispatchers.Main) {
+    // lambda runs in main thread.
     …
 }
 ```
@@ -159,6 +169,7 @@ launch(Dispatchers.Default) {
 - Threads are expensive, so are single-thread contexts
 - `Dispatchers.Default` is based on a ForkJoinPool on Android 5+
 - Coroutines can be used via Channels
+
 
 # Callbacks and locks elimination with channels
 
