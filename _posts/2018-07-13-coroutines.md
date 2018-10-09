@@ -86,7 +86,7 @@ launch(Dispatchers.Main.immediate) { ... }
 
 `Dispatchers.Main` guarantees that **coroutine is dispatched on main thread when it resumes**, and it uses a `Handler` as the native Android implementation to post in the application event loop.
 
-See its actual implementation:
+Its actual implementation looks like:
 
 ```kotlin
 val Main: HandlerDispatcher = HandlerContext(mainHandler, "Main")
@@ -111,17 +111,23 @@ launch(Disaptchers.Default+exceptionHandler+job) { ... }
 
 ## Scope
 
+A `coroutineScope` makes errors handling easier:  
+If any child coroutine fails, the entire scope fails and all of children coroutines are cancelled.
+
+In the `async` example, if the retrieval of a value failed, the other one continued then we would have a broken state to manage.  
+With a `coroutineScope`, `useValues` will be called only if both values retrieval succeeded. Also, if `deferred2` fails, `deferred1` is cancelled.
+
 ```kotlin
-launch(Dispatchers.Main) {
-    coroutineScope { 
-        val deferred1 = async(Dispatchers.Default) { getFirstValue() }
-        val deferred2 = async(Dispatchers.IO) { getSecondValue() }
-        useValues(deferred1.await(), deferred2.await())
-    }
-} // No need to join()
+coroutineScope { 
+    val deferred1 = async(Dispatchers.Default) { getFirstValue() }
+    val deferred2 = async(Dispatchers.IO) { getSecondValue() }
+    useValues(deferred1.await(), deferred2.await())
+}
 ```
 
+We also can "scope" an entire class to define its default `CoroutineContext` and leverage it.
 
+Example of a class implementing `CoroutineScope`:
 ```kotlin
 open class ScopedViewModel : ViewModel(), CoroutineScope {
     protected val job = Job()
@@ -203,7 +209,9 @@ protected val updateActor by lazy {
     }
 }
 // usage
-suspend fun filter(query: String?) = updateActor.offer(Filter(query))
+fun filter(query: String?) = updateActor.offer(Filter(query))
+//or
+suspend fun filter(query: String?) = updateActor.send(Filter(query))
 ```
 
 In this example, we take advantage of the Kotlin sealed classes feature to select which action to execute.
@@ -219,10 +227,7 @@ And all this actions will be queued, they will never run in parallel. That's a g
 
 ## Android lifecycle + Coroutines
 
-(Sample shamefully copied from JetBrain's [Guide to UI programming with coroutines](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/coroutines-guide-ui.md))
-
 Actors can be profitable for Android UI management too, they can ease tasks cancellation and prevent overloading of the UI thread.
-```
 
 Let's implement it and call `job.cancel()` when activity is destroyed.
 
