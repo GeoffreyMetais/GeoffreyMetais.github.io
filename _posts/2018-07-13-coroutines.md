@@ -165,6 +165,13 @@ GlobalScope.launch(Dispatchers.Main) {
 }
 ```
 
+We can even define a scope for application with dispatcher `Main` as default:
+```kotlin
+object AppScope : CoroutineScope by GlobalScope {
+    override val coroutineContext = Dispatchers.Main.immediate
+}
+```
+
 ## Notes
 
 - Coroutines limit Java interoperability
@@ -260,12 +267,8 @@ We can now combine all this, `setOnClick` function creates a conflated `actor` t
 ```kotlin
 fun View.setOnClick(action: suspend () -> Unit) {
     // launch one actor as a parent of the context job
-    val eventActor = (context as? CoroutineScope)?.actor<Unit>(
-        capacity = Channel.CONFLATED) {
-        for (event in channel) action()
-    } ?: GlobalScope.actor<Unit>(
-        Dispatchers.Main,
-        capacity = Channel.CONFLATED) {
+    val scope = (context as? CoroutineScope)?: AppScope
+    val eventActor = scope.actor<Unit>(capacity = Channel.CONFLATED) {
         for (event in channel) action()
     }
     // install a listener to activate this actor
