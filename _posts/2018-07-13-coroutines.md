@@ -409,3 +409,4 @@ Related readings:
 - [Guide to UI programming with coroutines](https://github.com/Kotlin/kotlinx.coroutines/blob/master/ui/coroutines-guide-ui.md)
 - [Understanding Android Core: Looper, Handler, and HandlerThread](https://blog.mindorks.com/android-core-looper-handler-and-handlerthread-bd54d69fe91a)
 - [Presenter as a Function: Reactive MVP for Android Using Kotlin Coroutines](https://medium.com/@rocketwagon/presenter-as-a-function-reactive-mvp-for-android-using-kotlin-coroutines-442fc4c77119)
+- [Sample DiffUtil implementation](https://gist.github.com/GeoffreyMetais/7c97389fed6b1674e4113d10bc656b92)
