@@ -1,18 +1,21 @@
 ---
 title: "Modern concurrency on Android with Kotlin"
 excerpt: "Quick introduction to Kotlin coroutines based on practical examples on how it could drastically improve Android applications and suppress callback hells"
+
 categories:
  - code
 tags:
  - vlc
  - android
+
+toc: true
+toc_label: "Coroutines way"
+toc_icon: "code-branch"
 ---
 
 Current Java/Android concurrency framework leads to callback hells and blocking states because we do not have any other simple way to guarantee thread safety.
 
 With coroutines, kotlin brings a very efficient and complete framework to manage concurrency in a more performant and simple way.
-
-{% include toc icon="code-fork" title="Coroutines way" %}
 
 # Suspending vs blocking
 

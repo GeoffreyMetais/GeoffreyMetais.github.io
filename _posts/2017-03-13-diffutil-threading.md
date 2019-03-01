@@ -6,9 +6,12 @@ categories:
 tags:
  - vlc
  - android
+
+toc: true
+toc_label: "DiffUtil steps"
+toc_icon: "code-branch"
 ---
 
-{% include toc icon="code-fork" title="DiffUtil steps" %}
 As stated in the [previous post](/code/diffutil/), we do process all [DiffUtil.DiffResult] calculations in main thread to preserve adapter state consistency.  
 But in VLC, we have to deal with potentially HUGE datasets, so calculation could take some time.  
 

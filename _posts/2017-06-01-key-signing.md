@@ -6,12 +6,13 @@ categories:
 tags:
  - vlc
  - android
+
+toc: true
+toc_icon: "cogs"
 ---
 
 At VideoLAN, we recently changed our signing procedure to leverage our security keys.
 As explained on [Yubico website](https://developers.yubico.com/PIV/Guides/Android_code_signing.html), Android signing is quite easy.
-
-{% include toc icon="gears" %}
 
 With this method, I can now sign the VLC releases on any of my computers without duplicating the keystore file. And keystore password is replaced by my Yubikey PIN.
 
@@ -19,7 +20,7 @@ Here is the precise process we went through to get this done.
 
 # Setup
 
-### Install dependencies
+## Install dependencies
 I am considering a Debian based distribution with open JDK 8 installed for this post.
 {: .notice--info}
 
@@ -30,7 +31,7 @@ sudo apt-get install opensc-pkcs11 zipalign
 `zipalign` can also be found in *android_sdk_path*/build-tools/*version*/
 {: .notice--info}
 
-### Prepare configuration file  
+## Prepare configuration file
 Then, we prepare the pkcs11 configuration. Let's create file `pkcs11_java.cfg` and fill it with:
 ```
 name = OpenSC-PKCS11
@@ -43,14 +44,14 @@ Yubico How-To advises `slotListIndex = 1`, but I had to set it to 0 to make it w
 
 Let's assume we save it in: `~/.pkcs11_java.cfg`
 
-### Set up your own management key
+## Set up your own management key
 If you did not set your management key, you have to do it now:
 ```
 key=`dd if=/dev/random bs=1 count=24 2>/dev/null | hexdump -v -e '/1 "%02X"'`
 echo $key
 yubico-piv-tool -a set-mgm-key -n $key
 ```
-### Change your PIN
+## Change your PIN
 Same for PIN setting, default one is *123456*
 ```
 yubico-piv-tool -a change-pin -P 123456 -N <NEW PIN>
