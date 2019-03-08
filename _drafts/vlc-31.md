@@ -14,19 +14,19 @@ toc_icon: "cogs"
 ---
 
 This is the first feature update in the VLC 3 cycle.
-It brings back Android auto and improve support of Oreo and Pie.
+It brings back Android auto and improves support of Oreo and Pie.
 <!--summary-->
 This version only supports Android 4.2 and newer. This allows us to use up-to-date SDK and restore some features like Android Auto!
 
 After 3.0 release, we could upgrade SDK and start a big refactoring. VLC now implements Android Arch Components, which helped us to drastically improve the application.  
 We basically rewrote the middle layer of VLC-Android from scratch, and made app architecture cleaner and safer. It results in a more stable app and more code shared between mobile and TV UIs.
 
-Next feature releases will come quicker. We'll now do smaller one in the future between major VLC (core) releases.
+Next feature releases will come quicker.
 
 # Onboarding
 
-Scanning your whole device storage is no longer mandatory. We have the will to keep VLC application lightweigt, and some of you only use it as a player.  
-We heard that, and now you can choose between the classic big scanning, a folder selection or no medialibrary at all!  
+Scanning your whole device storage is no longer mandatory. We have the will to keep VLC application lightweight, and some of you only use it as a player.  
+We heard that, and now you can choose between the classic big scanning, a folders selection or no medialibrary at all!  
 VLC still provides a file and network browser, if that's enough for you.
 
 ![Onboarding welcome](/assets/images/v3.1/onboarding1.png)
@@ -50,7 +50,7 @@ That was a much asked feature.
 
 # Android Auto is back!
 
-Because of Android 2 support, VLC-Android was stuck on old SDK and Android Auto had become too buggy.  
+Because of Android 2 support, VLC-Android 3.0 was stuck on an old SDK and Android Auto had become too buggy.  
 It is now restored, enjoy your music with VLC on the road again!
 
 ![auto player](/assets/images/v2.5/auto_playing.png){: .align-center}
@@ -70,7 +70,7 @@ You can now see last added videos from Android TV launcher (only for Android 8 a
 
 # File browser
 
-Browser gains somme neat additions.
+Browser gains some neat additions.
 
 First of all, **OTG devices** are now supported.  
 
