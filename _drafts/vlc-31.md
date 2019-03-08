@@ -1,11 +1,6 @@
 ---
 title: "Announcing VLC 3.1 release!"
 excerpt_separator: <!--summary-->
-header:
-  overlay_image: /assets/images/v3.0/renderer_background_cone.png
-  image_description: "A description of the image"
-classes:
-  - landing
 comments: false
 categories:
   - features
@@ -14,13 +9,19 @@ tags:
   - android
 
 toc: true
-toc_label: "Incoming features"
+toc_label: "What's new"
 toc_icon: "cogs"
 ---
 
 This is the first feature update in the VLC 3 cycle.
+It brings back Android auto and improve support of Oreo and Pie.
 <!--summary-->
-This version only supports Android 4.2 and newer. This allows to use up-to-date SDK and restore some features like Android Auto!
+This version only supports Android 4.2 and newer. This allows us to use up-to-date SDK and restore some features like Android Auto!
+
+After 3.0 release, we could upgrade SDK and start a big refactoring. VLC now implements Android Arch Components, which helped us to drastically improve the application.  
+We basically rewrote the middle layer of VLC-Android from scratch, and made app architecture cleaner and safer. It results in a more stable app and more code shared between mobile and TV UIs.
+
+Next feature releases will come quicker. We'll now do smaller one in the future between major VLC (core) releases.
 
 # Onboarding
 
@@ -28,9 +29,12 @@ Scanning your whole device storage is no longer mandatory. We have the will to k
 We heard that, and now you can choose between the classic big scanning, a folder selection or no medialibrary at all!  
 VLC still provides a file and network browser, if that's enough for you.
 
+![Onboarding welcome](/assets/images/v3.1/onboarding1.png)
+![Onboarding library](/assets/images/v3.1/onboarding2.png)
+
 # Launcher shortcuts
 
-On Android 7.1+, you can resume the last playlist you were listening to without even opening VLC  😌  
+On Android 7.1 and above, you can resume the last playlist you were listening to without even opening VLC  😌  
 Just long press on VLC icon on your device and shortcuts will pop up.
 
 They are only static shortcuts for now, we plan to make it customizable.
@@ -39,29 +43,58 @@ They are only static shortcuts for now, we plan to make it customizable.
 
 # Group videos by folders
 
+There is a new option in _Settings→Video→Group videos_, videos can now be grouped by folder. It's a convenient way to present you your collection.  
+That was a much asked feature.
+
+![Group folders](/assets/images/v3.1/group-folders.png){: .align-center}
+
 # Android Auto is back!
+
+Because of Android 2 support, VLC-Android was stuck on old SDK and Android Auto had become too buggy.  
+It is now restored, enjoy your music with VLC on the road again!
+
+![auto player](/assets/images/v2.5/auto_playing.png){: .align-center}
 
 # Large media libraries
 
-# Android TV channels
+Among the huge refactoring we did on VLC-Android, we implementend pagination for audio collection. This offers a better support of large collections.
+Collections with like 10GB of MP3s no longer overflow VLC, it should handle the task now.
 
-You can now see last added videos from Android TV launcher, and even watch a preview when you focus on it!
+VLC won't load all tracks at once anymore, it loads 'pages' of media and fills the list on the fly.
 
-![th channel](/assets/images/v3.1/tv_channels.png){: .align-center}
+# Home screen channel
+
+You can now see last added videos from Android TV launcher (only for Android 8 and above), and even preview one when you focus on it!
+
+![TV channel](/assets/images/v3.1/tv_channels.png){: .align-center}
+
+# File browser
+
+Browser gains somme neat additions.
+
+First of all, **OTG devices** are now supported.  
+
+You also can now set **any folder as favorite** (not only network folders), so you will find them directly at root level of browser
+
+To ease navigation, a **breadcrumb** is now displayed to show you where you are.
+
+![Browser breadcrumb](/assets/images/v3.1/breadcrumb.png){: .align-center}
+
 
 # Other new goodies
 Application:
- * OTG devices support in file browser
- * Favorites in local file browser
  * Refactored subtitles downloader
+ * Sorting preferences are now saved
  * A-B repeat
  * Manual orientation lock in video player
- * Playback notification now persists after service is removed by Android
- * Sorting preferences are now saved
- * Breadcrumb is browsers
+ * Podcast detection has been improved
  * Bottomsheet style for context menus
- * Improve support of very large media libraries
+ * Playback notification is now persistent, even when app is closed by Android
+
+ TV:
+ * Sort media
+ * group videos by name
 
  VLC:
-  * AV1 software decoding support.
+  * AV1 software decoding.
   * SMB 2/3
